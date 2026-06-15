@@ -15,24 +15,12 @@
       color: #1a1a1a;
     }
 
-    .container {
-      max-width: 680px;
-      margin: 0 auto;
-    }
+    .container { max-width: 680px; margin: 0 auto; }
 
     header { margin-bottom: 36px; }
 
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .subtitle {
-      margin-top: 6px;
-      color: #666;
-      font-size: 0.95rem;
-    }
+    h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
+    .subtitle { margin-top: 6px; color: #666; font-size: 0.95rem; }
 
     /* Drop zone */
     .drop-zone {
@@ -45,40 +33,27 @@
       transition: border-color 0.15s, background 0.15s;
       margin-bottom: 16px;
     }
-
-    .drop-zone:hover {
-      border-color: #888;
-    }
-
-    .drop-zone.dragover {
-      border-color: #4f87ff;
-      background: #f0f5ff;
-    }
-
-    .drop-zone.has-file {
-      border-style: solid;
-      border-color: #4f87ff;
-      background: #f5f8ff;
-    }
+    .drop-zone:hover { border-color: #888; }
+    .drop-zone.dragover { border-color: #4f87ff; background: #f0f5ff; }
+    .drop-zone.has-file { border-style: solid; border-color: #4f87ff; background: #f5f8ff; }
 
     .drop-icon { font-size: 2.5rem; margin-bottom: 14px; }
-
-    .drop-main {
-      font-size: 1rem;
-      color: #333;
-      margin-bottom: 6px;
-    }
-
-    .drop-hint {
-      font-size: 0.85rem;
-      color: #999;
-    }
+    .drop-main { font-size: 1rem; color: #333; margin-bottom: 6px; }
+    .drop-hint { font-size: 0.85rem; color: #999; }
 
     .file-badge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .file-name {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-top: 14px;
       padding: 6px 14px;
       background: #e8eeff;
       border-radius: 999px;
@@ -87,13 +62,22 @@
       font-weight: 500;
     }
 
-    /* Settings */
-    .settings {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+    .file-size { font-size: 0.82rem; color: #999; }
+
+    .warn-tag {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: #fff8e6;
+      border: 1px solid #fcd34d;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #92400e;
     }
+
+    /* Settings */
+    .settings { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 
     .setting-group {
       display: flex;
@@ -105,11 +89,7 @@
       padding: 8px 12px;
     }
 
-    .setting-group label {
-      font-size: 0.85rem;
-      color: #666;
-      white-space: nowrap;
-    }
+    .setting-group label { font-size: 0.85rem; color: #666; white-space: nowrap; }
 
     .setting-group select {
       border: none;
@@ -121,7 +101,7 @@
       font-family: inherit;
     }
 
-    /* Start button */
+    /* Main button */
     #startBtn {
       width: 100%;
       padding: 14px;
@@ -136,39 +116,42 @@
       transition: background 0.15s, opacity 0.15s;
       font-family: inherit;
     }
-
     #startBtn:hover:not(:disabled) { background: #333; }
-    #startBtn:disabled { opacity: 0.4; cursor: default; }
+    #startBtn:disabled { opacity: 0.38; cursor: default; }
+
+    /* Error */
+    .error-card {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #fca5a5;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      color: #b91c1c;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .error-card.visible { display: block; }
 
     /* Progress */
     .progress-card {
+      display: none;
       background: white;
       border-radius: 12px;
       padding: 20px 24px;
       margin-bottom: 16px;
-      display: none;
     }
-
     .progress-card.visible { display: block; }
 
-    .progress-status {
-      font-size: 0.9rem;
-      color: #444;
-      margin-bottom: 10px;
-    }
+    .progress-status { font-size: 0.9rem; color: #444; margin-bottom: 10px; }
 
-    .bar-track {
-      height: 6px;
-      background: #eee;
-      border-radius: 3px;
-      overflow: hidden;
-    }
+    .bar-track { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
 
     .bar-fill {
       height: 100%;
       background: #4f87ff;
       border-radius: 3px;
-      transition: width 0.3s ease;
+      transition: width 0.4s ease;
       width: 0%;
     }
 
@@ -179,17 +162,16 @@
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
+      50% { opacity: 0.3; }
     }
 
     /* Result */
     .result-card {
+      display: none;
       background: white;
       border-radius: 12px;
       padding: 20px 24px;
-      display: none;
     }
-
     .result-card.visible { display: block; }
 
     .result-top {
@@ -197,15 +179,13 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .result-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #1a1a1a;
-    }
+    .result-title { font-size: 0.9rem; font-weight: 600; }
 
-    .result-actions { display: flex; gap: 8px; }
+    .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .btn {
       padding: 7px 14px;
@@ -215,25 +195,24 @@
       font-weight: 500;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.15s;
+      transition: background 0.15s, opacity 0.15s;
+      white-space: nowrap;
     }
+    .btn:disabled { opacity: 0.5; cursor: default; }
 
-    .btn-ghost {
-      background: #f0f0f0;
-      color: #333;
-    }
-    .btn-ghost:hover { background: #e4e4e4; }
+    .btn-ghost { background: #f0f0f0; color: #333; }
+    .btn-ghost:hover:not(:disabled) { background: #e4e4e4; }
 
-    .btn-primary {
-      background: #1a1a1a;
-      color: white;
-    }
-    .btn-primary:hover { background: #333; }
+    .btn-dark { background: #1a1a1a; color: white; }
+    .btn-dark:hover:not(:disabled) { background: #333; }
+
+    .btn-green { background: #15803d; color: white; }
+    .btn-green:hover:not(:disabled) { background: #166534; }
 
     #resultText {
       width: 100%;
       min-height: 180px;
-      max-height: 480px;
+      max-height: 500px;
       padding: 14px;
       border: 1px solid #ebebeb;
       border-radius: 8px;
@@ -245,39 +224,16 @@
       background: #fafafa;
     }
 
-    .char-count {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: #aaa;
-      text-align: right;
-    }
+    .char-count { margin-top: 8px; font-size: 0.8rem; color: #aaa; text-align: right; }
 
-    /* Error */
-    .error-card {
-      background: #fff5f5;
-      border: 1px solid #fecdcd;
-      border-radius: 12px;
-      padding: 16px 20px;
-      font-size: 0.9rem;
-      color: #c0392b;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .error-card.visible { display: block; }
-
-    .note {
-      font-size: 0.8rem;
-      color: #aaa;
-      text-align: center;
-      margin-top: 24px;
-    }
+    .note { font-size: 0.8rem; color: #bbb; text-align: center; margin-top: 28px; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Транскрибатор</h1>
-      <p class="subtitle">Видео и аудио → текст · всё в браузере · без серверов · бесплатно</p>
+      <p class="subtitle">Видео и аудио → текст · всё в браузере · файлы никуда не уходят · бесплатно</p>
     </header>
 
     <div class="drop-zone" id="dropZone">
@@ -285,7 +241,11 @@
       <p class="drop-main">Перетащи файл сюда</p>
       <p class="drop-hint">или кликни для выбора · mp4, mov, mp3, m4a, wav и другие</p>
       <input type="file" id="fileInput" accept="video/*,audio/*" hidden>
-      <div class="file-badge" id="fileBadge" style="display:none"></div>
+      <div class="file-badge" id="fileBadge">
+        <span class="file-name" id="fileNameEl"></span>
+        <span class="file-size" id="fileSizeEl"></span>
+        <span class="warn-tag" id="sizeWarn">⚠️ Большой файл — может быть медленно</span>
+      </div>
     </div>
 
     <div class="settings">
@@ -293,7 +253,7 @@
         <label for="modelSelect">Модель</label>
         <select id="modelSelect">
           <option value="Xenova/whisper-small">small · быстрее</option>
-          <option value="Xenova/whisper-medium" selected>medium · лучше для русского</option>
+          <option value="Xenova/whisper-medium" selected>medium · лучше для RU</option>
         </select>
       </div>
       <div class="setting-group">
@@ -322,14 +282,15 @@
         <span class="result-title">Результат</span>
         <div class="result-actions">
           <button class="btn btn-ghost" id="copyBtn">Копировать</button>
-          <button class="btn btn-primary" id="downloadBtn">Скачать .txt</button>
+          <button class="btn btn-dark" id="dlTxtBtn">Скачать .txt</button>
+          <button class="btn btn-green" id="dlDocxBtn">Скачать .docx</button>
         </div>
       </div>
-      <textarea id="resultText" readonly></textarea>
+      <textarea id="resultText" readonly placeholder="Текст появится здесь по мере обработки..."></textarea>
       <div class="char-count" id="charCount"></div>
     </div>
 
-    <p class="note">Модель загружается один раз и кешируется в браузере. Файл никуда не отправляется.</p>
+    <p class="note">Модель (~700 МБ для medium) скачивается один раз и кешируется в браузере.</p>
   </div>
 
   <script type="module">
@@ -337,127 +298,167 @@
 
     env.allowLocalModels = false;
 
-    const dropZone   = document.getElementById('dropZone');
-    const fileInput  = document.getElementById('fileInput');
-    const fileBadge  = document.getElementById('fileBadge');
-    const startBtn   = document.getElementById('startBtn');
-    const errorCard  = document.getElementById('errorCard');
-    const progressCard   = document.getElementById('progressCard');
-    const progressStatus = document.getElementById('progressStatus');
-    const barFill    = document.getElementById('barFill');
-    const resultCard = document.getElementById('resultCard');
-    const resultText = document.getElementById('resultText');
-    const charCount  = document.getElementById('charCount');
-    const copyBtn    = document.getElementById('copyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
+    const $ = id => document.getElementById(id);
 
-    let selectedFile = null;
-    let cachedTranscriber = null;
-    let cachedModelName = null;
+    const dropZone       = $('dropZone');
+    const fileInput      = $('fileInput');
+    const fileBadge      = $('fileBadge');
+    const fileNameEl     = $('fileNameEl');
+    const fileSizeEl     = $('fileSizeEl');
+    const sizeWarn       = $('sizeWarn');
+    const startBtn       = $('startBtn');
+    const errorCard      = $('errorCard');
+    const progressCard   = $('progressCard');
+    const progressStatus = $('progressStatus');
+    const barFill        = $('barFill');
+    const resultCard     = $('resultCard');
+    const resultText     = $('resultText');
+    const charCount      = $('charCount');
+    const copyBtn        = $('copyBtn');
+    const dlTxtBtn       = $('dlTxtBtn');
+    const dlDocxBtn      = $('dlDocxBtn');
 
-    // File selection
+    let selectedFile    = null;
+    let cachedPipeline  = null;
+    let cachedModel     = null;
+    let currentBaseName = '';
+
+    // ── File selection ──────────────────────────────────────────────────────
+
     dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); setFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
 
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      setFile(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', (e) => setFile(e.target.files[0]));
+    function fmtSize(b) {
+      if (b > 1e9) return (b / 1e9).toFixed(1) + ' ГБ';
+      if (b > 1e6) return Math.round(b / 1e6) + ' МБ';
+      return Math.round(b / 1e3) + ' КБ';
+    }
 
     function setFile(file) {
       if (!file) return;
-      selectedFile = file;
+      selectedFile    = file;
+      currentBaseName = file.name.replace(/\.[^.]+$/, '');
+
       dropZone.classList.add('has-file');
-      fileBadge.style.display = 'inline-flex';
-      fileBadge.textContent = '📄 ' + file.name;
-      startBtn.disabled = false;
+      fileBadge.style.display = 'flex';
+      fileNameEl.textContent  = '📄 ' + file.name;
+      fileSizeEl.textContent  = fmtSize(file.size);
+      sizeWarn.style.display  = file.size > 300e6 ? 'inline-flex' : 'none';
+
+      startBtn.disabled    = false;
       startBtn.textContent = 'Транскрибировать';
       hideError();
     }
 
-    // Main action
-    startBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
-      await run(selectedFile);
-    });
+    // ── Main flow ───────────────────────────────────────────────────────────
+
+    startBtn.addEventListener('click', () => { if (selectedFile) run(selectedFile); });
 
     async function run(file) {
-      startBtn.disabled = true;
+      startBtn.disabled    = true;
       startBtn.textContent = 'Работаю...';
       hideError();
       resultCard.classList.remove('visible');
-      showProgress('Извлечение аудио...');
+      resultText.value = '';
+      charCount.textContent = '';
+      showProgress('Декодирование аудио...', 0);
+
+      let totalDuration   = 0;
+      let chunksDone      = 0;
+      let chunksEstimated = 1;
+      let partial         = '';
 
       try {
-        const audio = await extractAudio(file);
+        // 1. Extract audio
+        const audio = await extractAudio(file, dur => {
+          totalDuration   = dur;
+          chunksEstimated = Math.max(1, Math.ceil(dur / 25));
+          showProgress(`Аудио: ${Math.round(dur)} сек. Загружаю модель...`, 0);
+        });
 
-        const modelName = document.getElementById('modelSelect').value;
-        if (!cachedTranscriber || cachedModelName !== modelName) {
-          cachedModelName = modelName;
-          cachedTranscriber = null;
-          setProgress('Загрузка модели... (первый раз — это долго)', 0);
+        // 2. Load model (cached after first use)
+        const modelName = $('modelSelect').value;
+        if (!cachedPipeline || cachedModel !== modelName) {
+          cachedModel    = modelName;
+          cachedPipeline = null;
+          showProgress('Загрузка модели... (первый раз — скачивается один раз)', 0);
 
-          cachedTranscriber = await pipeline(
-            'automatic-speech-recognition',
-            modelName,
-            {
-              progress_callback: (p) => {
-                if (p.status === 'downloading') {
-                  setProgress(`Скачиваю модель: ${Math.round(p.progress ?? 0)}% (один раз, потом из кеша)`, p.progress ?? 0);
-                } else if (p.status === 'loading') {
-                  setPulse('Загружаю модель в память...');
-                }
-              },
-            }
-          );
+          cachedPipeline = await pipeline('automatic-speech-recognition', modelName, {
+            progress_callback: p => {
+              if (p.status === 'downloading') {
+                const pct = Math.round(p.progress ?? 0);
+                setProgress(`Скачиваю модель: ${pct}%`, pct);
+              } else if (p.status === 'loading') {
+                setPulse('Загружаю в память...');
+              }
+            },
+          });
         }
 
-        setPulse('Транскрибирую... (зависит от длины видео)');
+        // 3. Transcribe with streaming output
+        setPulse('Транскрибирую...');
+        resultCard.classList.add('visible');
 
-        const lang = document.getElementById('langSelect').value || undefined;
+        const lang = $('langSelect').value || undefined;
 
-        const result = await cachedTranscriber(audio, {
+        const result = await cachedPipeline(audio, {
           language: lang,
           task: 'transcribe',
           chunk_length_s: 30,
           stride_length_s: 5,
           return_timestamps: false,
+          chunk_callback: chunk => {
+            chunksDone++;
+            partial += chunk.text ?? '';
+            resultText.value = partial;
+            updateStats(partial);
+            const pct = Math.min((chunksDone / chunksEstimated) * 100, 95);
+            setProgress(`Транскрибирую: ${Math.round(pct)}%`, pct);
+          },
         });
 
-        const text = result.text.trim();
-
+        // 4. Show final clean text
+        const finalText = result.text.trim();
+        resultText.value = finalText;
+        updateStats(finalText);
         setProgress('Готово!', 100);
-        showResult(text, file.name);
 
       } catch (err) {
-        showError(err.message || String(err));
+        const msg = err?.message ?? String(err);
+        const friendly = msg.includes('memory') || msg.includes('RangeError')
+          ? 'Файл слишком большой для браузера. Попробуй аудио-формат (mp3, m4a) или используй Python-скрипт из этой же папки.'
+          : msg.includes('decode') || msg.includes('codec')
+          ? 'Браузер не смог декодировать этот формат. Попробуй mp4, mp3 или m4a.'
+          : msg;
+        showError(friendly);
+        resultCard.classList.remove('visible');
         console.error(err);
       } finally {
-        startBtn.disabled = false;
+        startBtn.disabled    = false;
         startBtn.textContent = 'Транскрибировать ещё раз';
       }
     }
 
-    async function extractAudio(file) {
-      const buf = await file.arrayBuffer();
+    async function extractAudio(file, onDuration) {
+      let buf;
+      try {
+        buf = await file.arrayBuffer();
+      } catch {
+        throw new Error('memory');
+      }
       const ctx = new AudioContext({ sampleRate: 16000 });
       let decoded;
       try {
         decoded = await ctx.decodeAudioData(buf);
       } catch {
-        throw new Error(
-          'Браузер не смог декодировать этот файл. Попробуй конвертировать в mp4 или mp3.'
-        );
+        throw new Error('decode');
       }
+      if (onDuration) onDuration(decoded.duration);
+
+      // Mix down to mono
       const mono = new Float32Array(decoded.length);
       for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
         const d = decoded.getChannelData(ch);
@@ -466,10 +467,12 @@
       return mono;
     }
 
-    function showProgress(msg) {
+    // ── Progress helpers ────────────────────────────────────────────────────
+
+    function showProgress(msg, pct) {
       progressCard.classList.add('visible');
       barFill.classList.remove('pulse');
-      barFill.style.width = '0%';
+      barFill.style.width = pct + '%';
       progressStatus.textContent = msg;
     }
 
@@ -484,47 +487,70 @@
       progressStatus.textContent = msg;
     }
 
-    function showResult(text, fileName) {
-      resultText.value = text;
-      charCount.textContent = `${text.length} символов · ${text.split(/\s+/).filter(Boolean).length} слов`;
-      resultCard.classList.add('visible');
-
-      // store filename for download
-      downloadBtn._fileName = fileName.replace(/\.[^.]+$/, '') + '.txt';
-    }
-
     function showError(msg) {
       errorCard.textContent = '⚠️ ' + msg;
       errorCard.classList.add('visible');
       progressCard.classList.remove('visible');
     }
 
-    function hideError() {
-      errorCard.classList.remove('visible');
+    function hideError() { errorCard.classList.remove('visible'); }
+
+    function updateStats(text) {
+      const words = text.split(/\s+/).filter(Boolean).length;
+      charCount.textContent = `${text.length.toLocaleString('ru')} символов · ${words.toLocaleString('ru')} слов`;
     }
 
-    // Copy
+    // ── Buttons ─────────────────────────────────────────────────────────────
+
     copyBtn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(resultText.value);
         copyBtn.textContent = 'Скопировано ✓';
-        setTimeout(() => copyBtn.textContent = 'Копировать', 2000);
+        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
       } catch {
         resultText.select();
         document.execCommand('copy');
       }
     });
 
-    // Download
-    downloadBtn.addEventListener('click', () => {
-      const blob = new Blob([resultText.value], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadBtn._fileName || 'transcription.txt';
-      a.click();
-      URL.revokeObjectURL(url);
+    dlTxtBtn.addEventListener('click', () => {
+      triggerDownload(
+        new Blob([resultText.value], { type: 'text/plain;charset=utf-8' }),
+        currentBaseName + '.txt'
+      );
     });
+
+    dlDocxBtn.addEventListener('click', async () => {
+      dlDocxBtn.disabled    = true;
+      dlDocxBtn.textContent = 'Генерирую...';
+      try {
+        const { Document, Packer, Paragraph, TextRun } = await import('https://esm.sh/docx@9.5.0');
+        const text = resultText.value;
+        const paragraphs = text
+          .split(/\n+/)
+          .filter(p => p.trim())
+          .map(line => new Paragraph({ children: [new TextRun({ text: line, size: 24, font: 'Arial' })] }));
+
+        if (paragraphs.length === 0) {
+          paragraphs.push(new Paragraph({ children: [new TextRun({ text, size: 24, font: 'Arial' })] }));
+        }
+
+        const doc  = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+        const blob = await Packer.toBlob(doc);
+        triggerDownload(blob, currentBaseName + '.docx');
+      } catch (err) {
+        showError('Не удалось создать .docx: ' + (err?.message ?? err));
+      } finally {
+        dlDocxBtn.disabled    = false;
+        dlDocxBtn.textContent = 'Скачать .docx';
+      }
+    });
+
+    function triggerDownload(blob, name) {
+      const url = URL.createObjectURL(blob);
+      Object.assign(document.createElement('a'), { href: url, download: name }).click();
+      URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>
