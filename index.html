@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Транскрибатор</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f7f7f8;
+      min-height: 100vh;
+      padding: 48px 20px 80px;
+      color: #1a1a1a;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    header { margin-bottom: 36px; }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      background: white;
+      border: 2px dashed #d0d0d0;
+      border-radius: 14px;
+      padding: 52px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 16px;
+    }
+
+    .drop-zone:hover {
+      border-color: #888;
+    }
+
+    .drop-zone.dragover {
+      border-color: #4f87ff;
+      background: #f0f5ff;
+    }
+
+    .drop-zone.has-file {
+      border-style: solid;
+      border-color: #4f87ff;
+      background: #f5f8ff;
+    }
+
+    .drop-icon { font-size: 2.5rem; margin-bottom: 14px; }
+
+    .drop-main {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .drop-hint {
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .file-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      padding: 6px 14px;
+      background: #e8eeff;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: #3a6aee;
+      font-weight: 500;
+    }
+
+    /* Settings */
+    .settings {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .setting-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid #e4e4e4;
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-group label {
+      font-size: 0.85rem;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .setting-group select {
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+      color: #1a1a1a;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Start button */
+    #startBtn {
+      width: 100%;
+      padding: 14px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: inherit;
+    }
+
+    #startBtn:hover:not(:disabled) { background: #333; }
+    #startBtn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Progress */
+    .progress-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .progress-card.visible { display: block; }
+
+    .progress-status {
+      font-size: 0.9rem;
+      color: #444;
+      margin-bottom: 10px;
+    }
+
+    .bar-track {
+      height: 6px;
+      background: #eee;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #4f87ff;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .bar-fill.pulse {
+      animation: pulse 1.4s ease-in-out infinite;
+      width: 100%;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    /* Result */
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: none;
+    }
+
+    .result-card.visible { display: block; }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .result-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .result-actions { display: flex; gap: 8px; }
+
+    .btn {
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-ghost {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .btn-ghost:hover { background: #e4e4e4; }
+
+    .btn-primary {
+      background: #1a1a1a;
+      color: white;
+    }
+    .btn-primary:hover { background: #333; }
+
+    #resultText {
+      width: 100%;
+      min-height: 180px;
+      max-height: 480px;
+      padding: 14px;
+      border: 1px solid #ebebeb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: #1a1a1a;
+      resize: vertical;
+      font-family: inherit;
+      background: #fafafa;
+    }
+
+    .char-count {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #aaa;
+      text-align: right;
+    }
+
+    /* Error */
+    .error-card {
+      background: #fff5f5;
+      border: 1px solid #fecdcd;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.9rem;
+      color: #c0392b;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-card.visible { display: block; }
+
+    .note {
+      font-size: 0.8rem;
+      color: #aaa;
+      text-align: center;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Транскрибатор</h1>
+      <p class="subtitle">Видео и аудио → текст · всё в браузере · без серверов · бесплатно</p>
+    </header>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">🎬</div>
+      <p class="drop-main">Перетащи файл сюда</p>
+      <p class="drop-hint">или кликни для выбора · mp4, mov, mp3, m4a, wav и другие</p>
+      <input type="file" id="fileInput" accept="video/*,audio/*" hidden>
+      <div class="file-badge" id="fileBadge" style="display:none"></div>
+    </div>
+
+    <div class="settings">
+      <div class="setting-group">
+        <label for="modelSelect">Модель</label>
+        <select id="modelSelect">
+          <option value="Xenova/whisper-small">small · быстрее</option>
+          <option value="Xenova/whisper-medium" selected>medium · лучше для русского</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="langSelect">Язык</label>
+        <select id="langSelect">
+          <option value="russian" selected>Русский</option>
+          <option value="english">English</option>
+          <option value="">Авто</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="startBtn" disabled>Выбери файл</button>
+
+    <div class="error-card" id="errorCard"></div>
+
+    <div class="progress-card" id="progressCard">
+      <div class="progress-status" id="progressStatus">Подготовка...</div>
+      <div class="bar-track">
+        <div class="bar-fill" id="barFill"></div>
+      </div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-top">
+        <span class="result-title">Результат</span>
+        <div class="result-actions">
+          <button class="btn btn-ghost" id="copyBtn">Копировать</button>
+          <button class="btn btn-primary" id="downloadBtn">Скачать .txt</button>
+        </div>
+      </div>
+      <textarea id="resultText" readonly></textarea>
+      <div class="char-count" id="charCount"></div>
+    </div>
+
+    <p class="note">Модель загружается один раз и кешируется в браузере. Файл никуда не отправляется.</p>
+  </div>
+
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+    env.allowLocalModels = false;
+
+    const dropZone   = document.getElementById('dropZone');
+    const fileInput  = document.getElementById('fileInput');
+    const fileBadge  = document.getElementById('fileBadge');
+    const startBtn   = document.getElementById('startBtn');
+    const errorCard  = document.getElementById('errorCard');
+    const progressCard   = document.getElementById('progressCard');
+    const progressStatus = document.getElementById('progressStatus');
+    const barFill    = document.getElementById('barFill');
+    const resultCard = document.getElementById('resultCard');
+    const resultText = document.getElementById('resultText');
+    const charCount  = document.getElementById('charCount');
+    const copyBtn    = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let selectedFile = null;
+    let cachedTranscriber = null;
+    let cachedModelName = null;
+
+    // File selection
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      setFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => setFile(e.target.files[0]));
+
+    function setFile(file) {
+      if (!file) return;
+      selectedFile = file;
+      dropZone.classList.add('has-file');
+      fileBadge.style.display = 'inline-flex';
+      fileBadge.textContent = '📄 ' + file.name;
+      startBtn.disabled = false;
+      startBtn.textContent = 'Транскрибировать';
+      hideError();
+    }
+
+    // Main action
+    startBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      await run(selectedFile);
+    });
+
+    async function run(file) {
+      startBtn.disabled = true;
+      startBtn.textContent = 'Работаю...';
+      hideError();
+      resultCard.classList.remove('visible');
+      showProgress('Извлечение аудио...');
+
+      try {
+        const audio = await extractAudio(file);
+
+        const modelName = document.getElementById('modelSelect').value;
+        if (!cachedTranscriber || cachedModelName !== modelName) {
+          cachedModelName = modelName;
+          cachedTranscriber = null;
+          setProgress('Загрузка модели... (первый раз — это долго)', 0);
+
+          cachedTranscriber = await pipeline(
+            'automatic-speech-recognition',
+            modelName,
+            {
+              progress_callback: (p) => {
+                if (p.status === 'downloading') {
+                  setProgress(`Скачиваю модель: ${Math.round(p.progress ?? 0)}% (один раз, потом из кеша)`, p.progress ?? 0);
+                } else if (p.status === 'loading') {
+                  setPulse('Загружаю модель в память...');
+                }
+              },
+            }
+          );
+        }
+
+        setPulse('Транскрибирую... (зависит от длины видео)');
+
+        const lang = document.getElementById('langSelect').value || undefined;
+
+        const result = await cachedTranscriber(audio, {
+          language: lang,
+          task: 'transcribe',
+          chunk_length_s: 30,
+          stride_length_s: 5,
+          return_timestamps: false,
+        });
+
+        const text = result.text.trim();
+
+        setProgress('Готово!', 100);
+        showResult(text, file.name);
+
+      } catch (err) {
+        showError(err.message || String(err));
+        console.error(err);
+      } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = 'Транскрибировать ещё раз';
+      }
+    }
+
+    async function extractAudio(file) {
+      const buf = await file.arrayBuffer();
+      const ctx = new AudioContext({ sampleRate: 16000 });
+      let decoded;
+      try {
+        decoded = await ctx.decodeAudioData(buf);
+      } catch {
+        throw new Error(
+          'Браузер не смог декодировать этот файл. Попробуй конвертировать в mp4 или mp3.'
+        );
+      }
+      const mono = new Float32Array(decoded.length);
+      for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+        const d = decoded.getChannelData(ch);
+        for (let i = 0; i < d.length; i++) mono[i] += d[i] / decoded.numberOfChannels;
+      }
+      return mono;
+    }
+
+    function showProgress(msg) {
+      progressCard.classList.add('visible');
+      barFill.classList.remove('pulse');
+      barFill.style.width = '0%';
+      progressStatus.textContent = msg;
+    }
+
+    function setProgress(msg, pct) {
+      barFill.classList.remove('pulse');
+      barFill.style.width = Math.min(pct, 100) + '%';
+      progressStatus.textContent = msg;
+    }
+
+    function setPulse(msg) {
+      barFill.classList.add('pulse');
+      progressStatus.textContent = msg;
+    }
+
+    function showResult(text, fileName) {
+      resultText.value = text;
+      charCount.textContent = `${text.length} символов · ${text.split(/\s+/).filter(Boolean).length} слов`;
+      resultCard.classList.add('visible');
+
+      // store filename for download
+      downloadBtn._fileName = fileName.replace(/\.[^.]+$/, '') + '.txt';
+    }
+
+    function showError(msg) {
+      errorCard.textContent = '⚠️ ' + msg;
+      errorCard.classList.add('visible');
+      progressCard.classList.remove('visible');
+    }
+
+    function hideError() {
+      errorCard.classList.remove('visible');
+    }
+
+    // Copy
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(resultText.value);
+        copyBtn.textContent = 'Скопировано ✓';
+        setTimeout(() => copyBtn.textContent = 'Копировать', 2000);
+      } catch {
+        resultText.select();
+        document.execCommand('copy');
+      }
+    });
+
+    // Download
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([resultText.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadBtn._fileName || 'transcription.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
