@@ -243,24 +243,39 @@ async function extractAudio(file, onDuration) {
 }
 
 // ── Progress helpers ──────────────────────────────────────────────────────
+let _pulseTimer = null;
+
+function clearPulseTimer() {
+  if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
+}
+
 function showProgress(status, pct, eta) {
+  clearPulseTimer();
   progressCard.classList.add('visible');
   barFill.classList.remove('pulse');
-  barFill.style.width     = Math.min(pct, 100) + '%';
+  barFill.style.width        = Math.min(pct, 100) + '%';
   progressStatus.textContent = status;
   progressPct.textContent    = pct > 0 && pct < 100 ? pct + '%' : '';
   progressEta.textContent    = eta ?? '';
 }
 
 function setPulse(status) {
+  clearPulseTimer();
   progressCard.classList.add('visible');
   barFill.classList.add('pulse');
   progressStatus.textContent = status;
   progressPct.textContent    = '';
-  progressEta.textContent    = '';
+
+  const start = Date.now();
+  progressEta.textContent = '0 сек';
+  _pulseTimer = setInterval(() => {
+    const elapsed = Math.round((Date.now() - start) / 1000);
+    progressEta.textContent = elapsed + ' сек';
+  }, 1000);
 }
 
 function showError(msg) {
+  clearPulseTimer();
   errorCard.textContent = '⚠️ ' + msg;
   errorCard.classList.add('visible');
   progressCard.classList.remove('visible');
