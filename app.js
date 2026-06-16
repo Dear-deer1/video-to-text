@@ -108,7 +108,6 @@ async function run(file) {
     const audio = await extractAudio(file, dur => {
       totalDuration   = dur;
       chunksEstimated = Math.max(1, Math.ceil(dur / 25));
-      showProgress(`Аудио: ${Math.round(dur)} сек · Загружаю модель...`, 0, '');
     });
 
     // 2. Load (or reuse) the Whisper model
@@ -120,10 +119,13 @@ async function run(file) {
       const { pipeline } = await getLib();
       const dlStats = {};
 
+      // Start timer immediately — before first progress_callback fires
+      setPulse('Загружаю модель...');
+
       cachedPipeline = await pipeline('automatic-speech-recognition', modelName, {
         progress_callback: p => {
           if (p.status === 'downloading') {
-            // Reset timer when a new file starts downloading
+            // Reset per-file timer when a new file starts
             if (p.file !== dlStats.file) {
               dlStats.file  = p.file;
               dlStats.start = Date.now();
