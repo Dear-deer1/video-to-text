@@ -1,7 +1,11 @@
 // ── Preload transformers.js in background so it's ready when user clicks ──
 let _lib = null;
 const _libReady = import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
-  .then(m => { m.env.allowLocalModels = false; _lib = m; })
+  .then(m => {
+    m.env.allowLocalModels = false;
+    m.env.backends.onnx.wasm.proxy = true; // run ONNX in a Web Worker → no UI freeze
+    _lib = m;
+  })
   .catch(() => {});
 
 async function getLib() {
@@ -9,6 +13,7 @@ async function getLib() {
   if (!_lib) {
     _lib = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
     _lib.env.allowLocalModels = false;
+    _lib.env.backends.onnx.wasm.proxy = true;
   }
   return _lib;
 }
@@ -44,11 +49,7 @@ let currentBaseName = '';
 
 // ── File selection ────────────────────────────────────────────────────────
 dropZone.addEventListener('click', () => fileInput.click());
-
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropZone.classList.add('dragover');
-});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
@@ -95,20 +96,17 @@ async function run(file) {
   resultCard.classList.remove('visible');
   resultText.value      = '';
   charCount.textContent = '';
-  showProgress('Декодирование аудио...', 0, '');
 
-  let totalDuration   = 0;
   let chunksEstimated = 1;
   let chunksDone      = 0;
   let chunkStartTime  = null;
   let partial         = '';
 
   try {
-    // 1. Extract audio from video/audio file
-    const audio = await extractAudio(file, dur => {
-      totalDuration   = dur;
-      chunksEstimated = Math.max(1, Math.ceil(dur / 25));
-    });
+    // 1. Extract audio in a Web Worker (non-blocking)
+    setPulse('Читаю файл...');
+    const { mono: audio, duration } = await extractAudioInWorker(file, msg => setPulse(msg));
+    chunksEstimated = Math.max(1, Math.ceil(duration / 25));
 
     // 2. Load (or reuse) the Whisper model
     const modelName = $('modelSelect').value;
@@ -119,32 +117,30 @@ async function run(file) {
       const { pipeline } = await getLib();
       const dlStats = {};
 
-      // Start timer immediately — before first progress_callback fires
       setPulse('Загружаю модель...');
 
       cachedPipeline = await pipeline('automatic-speech-recognition', modelName, {
         progress_callback: p => {
           if (p.status === 'downloading') {
-            // Reset per-file timer when a new file starts
             if (p.file !== dlStats.file) {
               dlStats.file  = p.file;
               dlStats.start = Date.now();
             }
 
             const elapsed = (Date.now() - dlStats.start) / 1000;
-            const speed   = elapsed > 0.5 ? (p.loaded ?? 0) / elapsed : 0; // bytes/s
+            const speed   = elapsed > 0.5 ? (p.loaded ?? 0) / elapsed : 0;
             const left    = speed > 0 ? ((p.total ?? 0) - (p.loaded ?? 0)) / speed : 0;
 
             const pct    = Math.round(p.progress ?? 0);
             const loaded = Math.round((p.loaded ?? 0) / 1e6);
             const total  = Math.round((p.total  ?? 0) / 1e6);
 
-            const sizeStr = total > 0 ? `${loaded} / ${total} МБ` : '';
+            const sizeStr = total > 0 ? ` (${loaded} / ${total} МБ)` : '';
             const etaStr  = speed > 100_000 && left > 3 && elapsed > 2
               ? `Скорость: ${fmtSize(Math.round(speed))}/с · ещё ${fmtTime(left)}`
               : '';
 
-            showProgress(`Скачиваю модель: ${pct}%${sizeStr ? ` (${sizeStr})` : ''}`, pct, etaStr);
+            showProgress(`Скачиваю модель: ${pct}%${sizeStr}`, pct, etaStr);
 
           } else if (p.status === 'loading') {
             setPulse('Загружаю модель в память...');
@@ -192,9 +188,9 @@ async function run(file) {
   } catch (err) {
     const msg = err?.message ?? String(err);
     const friendly =
-      msg.includes('memory') || msg.includes('RangeError')
+      msg.includes('memory')
         ? 'Файл слишком большой для браузера. Попробуй аудио-формат (mp3, m4a) или Python-скрипт из этой папки.'
-        : msg.includes('decode') || msg.includes('codec')
+        : msg.includes('decode')
         ? 'Браузер не смог декодировать этот формат. Попробуй mp4, mp3 или m4a.'
         : msg;
 
@@ -207,41 +203,30 @@ async function run(file) {
   }
 }
 
-// ── Audio extraction ──────────────────────────────────────────────────────
-async function extractAudio(file, onDuration) {
-  let buf;
-  try {
-    buf = await file.arrayBuffer();
-  } catch {
-    throw new Error('memory: не удалось загрузить файл в память');
-  }
+// ── Audio extraction via Web Worker ──────────────────────────────────────
+function extractAudioInWorker(file, onStatus) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker('worker.js');
 
-  const ctx = new AudioContext({ sampleRate: 16000 });
-  let decoded;
-  try {
-    decoded = await ctx.decodeAudioData(buf);
-  } catch {
-    throw new Error('decode: браузер не смог декодировать аудио-дорожку');
-  }
+    worker.onmessage = ({ data }) => {
+      if (data.type === 'status') {
+        onStatus?.(data.msg);
+      } else if (data.type === 'done') {
+        worker.terminate();
+        resolve({ mono: data.mono, duration: data.duration });
+      } else if (data.type === 'error') {
+        worker.terminate();
+        reject(new Error(data.msg));
+      }
+    };
 
-  if (onDuration) onDuration(decoded.duration);
+    worker.onerror = e => {
+      worker.terminate();
+      reject(new Error(e.message ?? 'Worker error'));
+    };
 
-  // Mix channels down to mono in 500k-sample chunks to avoid freezing the UI
-  const mono  = new Float32Array(decoded.length);
-  const CHUNK = 500_000;
-
-  for (let start = 0; start < decoded.length; start += CHUNK) {
-    const end = Math.min(start + CHUNK, decoded.length);
-    for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
-      const d = decoded.getChannelData(ch);
-      for (let i = start; i < end; i++) mono[i] += d[i] / decoded.numberOfChannels;
-    }
-    if (start + CHUNK < decoded.length) {
-      await new Promise(r => setTimeout(r, 0)); // yield to UI thread
-    }
-  }
-
-  return mono;
+    worker.postMessage({ file });
+  });
 }
 
 // ── Progress helpers ──────────────────────────────────────────────────────
@@ -271,8 +256,7 @@ function setPulse(status) {
   const start = Date.now();
   progressEta.textContent = '0 сек';
   _pulseTimer = setInterval(() => {
-    const elapsed = Math.round((Date.now() - start) / 1000);
-    progressEta.textContent = elapsed + ' сек';
+    progressEta.textContent = Math.round((Date.now() - start) / 1000) + ' сек';
   }, 1000);
 }
 
