@@ -14,15 +14,33 @@
       <p class="subtitle">Видео и аудио → текст · всё в браузере · файлы никуда не уходят · бесплатно</p>
     </header>
 
-    <div class="drop-zone" id="dropZone">
-      <div class="drop-icon">🎬</div>
-      <p class="drop-main">Перетащи файл сюда</p>
-      <p class="drop-hint">или кликни для выбора · mp4, mov, webm, mp3, m4a, wav и другие</p>
-      <input type="file" id="fileInput" accept="video/*,audio/*" hidden>
-      <div class="file-badge" id="fileBadge">
-        <span class="file-name" id="fileNameEl"></span>
-        <span class="file-size" id="fileSizeEl"></span>
-        <span class="warn-tag" id="sizeWarn">⚠️ Большой файл — может быть медленно</span>
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <button class="mode-btn active" id="modeFile">📁 Файл</button>
+      <button class="mode-btn" id="modeUrl">🔗 Ссылка</button>
+    </div>
+
+    <!-- File input -->
+    <div id="fileSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">🎬</div>
+        <p class="drop-main">Перетащи файл сюда</p>
+        <p class="drop-hint">или кликни для выбора · mp4, mov, webm, mp3, m4a, wav и другие</p>
+        <input type="file" id="fileInput" accept="video/*,audio/*" hidden>
+        <div class="file-badge" id="fileBadge">
+          <span class="file-name" id="fileNameEl"></span>
+          <span class="file-size" id="fileSizeEl"></span>
+          <span class="warn-tag" id="sizeWarn">⚠️ Большой файл — может быть медленно</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- URL input -->
+    <div id="urlSection" style="display:none">
+      <div class="url-zone">
+        <input class="url-input" type="url" id="urlInput"
+               placeholder="https://example.com/audio.mp3">
+        <div class="url-hint" id="urlHint"></div>
       </div>
     </div>
 
@@ -72,7 +90,9 @@
       <div class="char-count" id="charCount"></div>
     </div>
 
-    <p class="note">Модель (~700 МБ для medium) скачивается один раз и кешируется в браузере.</p>
+    <p class="note">
+      Модель кешируется в браузере. Скачивается один раз (~700 МБ), при каждом открытии страницы инициализируется ~30–60 сек — это нормально.
+    </p>
   </div>
 
   <script type="module" src="app.js"></script>

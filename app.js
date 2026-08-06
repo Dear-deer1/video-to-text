@@ -1,11 +1,7 @@
 // ── Preload transformers.js in background so it's ready when user clicks ──
 let _lib = null;
 const _libReady = import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
-  .then(m => {
-    m.env.allowLocalModels = false;
-    m.env.backends.onnx.wasm.proxy = true; // run ONNX in a Web Worker → no UI freeze
-    _lib = m;
-  })
+  .then(m => { m.env.allowLocalModels = false; _lib = m; })
   .catch(() => {});
 
 async function getLib() {
@@ -13,7 +9,6 @@ async function getLib() {
   if (!_lib) {
     _lib = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
     _lib.env.allowLocalModels = false;
-    _lib.env.backends.onnx.wasm.proxy = true;
   }
   return _lib;
 }
@@ -21,12 +16,20 @@ async function getLib() {
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
+const modeFile  = $('modeFile');
+const modeUrl   = $('modeUrl');
+const fileSection = $('fileSection');
+const urlSection  = $('urlSection');
+
 const dropZone       = $('dropZone');
 const fileInput      = $('fileInput');
 const fileBadge      = $('fileBadge');
 const fileNameEl     = $('fileNameEl');
 const fileSizeEl     = $('fileSizeEl');
 const sizeWarn       = $('sizeWarn');
+const urlInput       = $('urlInput');
+const urlHint        = $('urlHint');
+
 const startBtn       = $('startBtn');
 const errorCard      = $('errorCard');
 const progressCard   = $('progressCard');
@@ -43,9 +46,85 @@ const dlDocxBtn      = $('dlDocxBtn');
 
 // ── State ─────────────────────────────────────────────────────────────────
 let selectedFile    = null;
+let currentMode     = 'file'; // 'file' | 'url'
 let cachedPipeline  = null;
 let cachedModel     = null;
-let currentBaseName = '';
+let currentBaseName = 'transcription';
+
+// ── Mode tabs ─────────────────────────────────────────────────────────────
+modeFile.addEventListener('click', () => setMode('file'));
+modeUrl.addEventListener('click',  () => setMode('url'));
+
+function setMode(mode) {
+  currentMode = mode;
+  modeFile.classList.toggle('active', mode === 'file');
+  modeUrl.classList.toggle('active',  mode === 'url');
+  fileSection.style.display = mode === 'file' ? '' : 'none';
+  urlSection.style.display  = mode === 'url'  ? '' : 'none';
+
+  if (mode === 'file') {
+    startBtn.disabled    = !selectedFile;
+    startBtn.textContent = selectedFile ? 'Транскрибировать' : 'Выбери файл';
+  } else {
+    updateUrlHint(urlInput.value.trim());
+  }
+  hideError();
+}
+
+// ── URL detection ─────────────────────────────────────────────────────────
+const PLATFORM_PATTERNS = [
+  { re: /youtube\.com|youtu\.be/i,        name: 'YouTube'   },
+  { re: /mts-link\.ru|mts\.ru\/link/i,    name: 'MTS Link'  },
+  { re: /rutube\.ru/i,                    name: 'RuTube'    },
+  { re: /vk\.com|vkvideo\.ru/i,           name: 'VK Видео'  },
+  { re: /dzen\.ru/i,                      name: 'Дзен'      },
+  { re: /ok\.ru/i,                        name: 'Одноклассники' },
+  { re: /vimeo\.com/i,                    name: 'Vimeo'     },
+];
+
+function detectPlatform(url) {
+  try { new URL(url); } catch { return null; }
+  const m = PLATFORM_PATTERNS.find(p => p.re.test(url));
+  return m ? m.name : null;
+}
+
+function isDirectMedia(url) {
+  return /\.(mp3|mp4|wav|m4a|ogg|webm|aac|flac|mov|avi|mkv)(\?.*)?$/i.test(url);
+}
+
+function updateUrlHint(url) {
+  if (!url) {
+    urlHint.textContent = '';
+    urlHint.className   = 'url-hint';
+    startBtn.disabled    = true;
+    startBtn.textContent = 'Введи ссылку';
+    return;
+  }
+
+  const platform = detectPlatform(url);
+
+  if (platform) {
+    urlHint.className = 'url-hint warn';
+    urlHint.innerHTML =
+      `<b>${platform}</b> нельзя транскрибировать прямо в браузере — платформа запрещает это.\n\n` +
+      `Используй Python-скрипт из этой же папки:\n` +
+      `<code>python3 transcribe.py "${url}"</code>`;
+    startBtn.disabled    = true;
+    startBtn.textContent = 'Недоступно в браузере';
+  } else if (isDirectMedia(url)) {
+    urlHint.className   = 'url-hint info';
+    urlHint.textContent = 'Прямая ссылка на медиафайл — попробую скачать и транскрибировать.';
+    startBtn.disabled    = false;
+    startBtn.textContent = 'Транскрибировать';
+  } else {
+    urlHint.className   = 'url-hint';
+    urlHint.textContent = 'Поддерживаются прямые ссылки на .mp3 .mp4 .wav и другие медиафайлы.';
+    startBtn.disabled    = false;
+    startBtn.textContent = 'Попробовать';
+  }
+}
+
+urlInput.addEventListener('input', () => updateUrlHint(urlInput.value.trim()));
 
 // ── File selection ────────────────────────────────────────────────────────
 dropZone.addEventListener('click', () => fileInput.click());
@@ -86,10 +165,42 @@ function setFile(file) {
   hideError();
 }
 
-// ── Main flow ─────────────────────────────────────────────────────────────
-startBtn.addEventListener('click', () => { if (selectedFile) run(selectedFile); });
+// ── Main button ───────────────────────────────────────────────────────────
+startBtn.addEventListener('click', () => {
+  if (currentMode === 'file' && selectedFile) {
+    runTranscription(selectedFile);
+  } else if (currentMode === 'url') {
+    const url = urlInput.value.trim();
+    if (url) runFromUrl(url);
+  }
+});
 
-async function run(file) {
+async function runFromUrl(url) {
+  setPulse('Загружаю файл по ссылке...');
+  startBtn.disabled    = true;
+  startBtn.textContent = 'Работаю...';
+  hideError();
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const blob = await response.blob();
+    const name = url.split('/').pop()?.split('?')[0] || 'audio';
+    currentBaseName = name.replace(/\.[^.]+$/, '');
+    const file = new File([blob], name, { type: blob.type });
+    await runTranscription(file);
+  } catch (err) {
+    showError(
+      'Не удалось загрузить файл: ' + err.message + '\n\n' +
+      'Причины: сервер запрещает загрузку (CORS), или ссылка недоступна.\n' +
+      'Скачай файл вручную и загрузи через вкладку «Файл».'
+    );
+    startBtn.disabled    = false;
+    startBtn.textContent = 'Попробовать';
+  }
+}
+
+async function runTranscription(file) {
   startBtn.disabled    = true;
   startBtn.textContent = 'Работаю...';
   hideError();
@@ -103,12 +214,12 @@ async function run(file) {
   let partial         = '';
 
   try {
-    // 1. Extract audio in a Web Worker (non-blocking)
+    // 1. Extract audio in Web Worker
     setPulse('Читаю файл...');
     const { mono: audio, duration } = await extractAudioInWorker(file, msg => setPulse(msg));
     chunksEstimated = Math.max(1, Math.ceil(duration / 25));
 
-    // 2. Load (or reuse) the Whisper model
+    // 2. Load Whisper model
     const modelName = $('modelSelect').value;
     if (!cachedPipeline || cachedModel !== modelName) {
       cachedModel    = modelName;
@@ -116,7 +227,6 @@ async function run(file) {
 
       const { pipeline } = await getLib();
       const dlStats = {};
-
       setPulse('Загружаю модель...');
 
       cachedPipeline = await pipeline('automatic-speech-recognition', modelName, {
@@ -126,22 +236,17 @@ async function run(file) {
               dlStats.file  = p.file;
               dlStats.start = Date.now();
             }
-
             const elapsed = (Date.now() - dlStats.start) / 1000;
             const speed   = elapsed > 0.5 ? (p.loaded ?? 0) / elapsed : 0;
             const left    = speed > 0 ? ((p.total ?? 0) - (p.loaded ?? 0)) / speed : 0;
-
-            const pct    = Math.round(p.progress ?? 0);
-            const loaded = Math.round((p.loaded ?? 0) / 1e6);
-            const total  = Math.round((p.total  ?? 0) / 1e6);
-
+            const pct     = Math.round(p.progress ?? 0);
+            const loaded  = Math.round((p.loaded ?? 0) / 1e6);
+            const total   = Math.round((p.total  ?? 0) / 1e6);
             const sizeStr = total > 0 ? ` (${loaded} / ${total} МБ)` : '';
             const etaStr  = speed > 100_000 && left > 3 && elapsed > 2
               ? `Скорость: ${fmtSize(Math.round(speed))}/с · ещё ${fmtTime(left)}`
               : '';
-
             showProgress(`Скачиваю модель: ${pct}%${sizeStr}`, pct, etaStr);
-
           } else if (p.status === 'loading') {
             setPulse('Загружаю модель в память...');
           }
@@ -149,7 +254,7 @@ async function run(file) {
       });
     }
 
-    // 3. Transcribe — text appears chunk by chunk
+    // 3. Transcribe — text streams chunk by chunk
     setPulse('Транскрибирую...');
     resultCard.classList.add('visible');
     const lang = $('langSelect').value || undefined;
@@ -179,7 +284,7 @@ async function run(file) {
       },
     });
 
-    // 4. Replace streaming preview with final clean text
+    // 4. Final clean text
     const finalText = result.text.trim();
     resultText.value = finalText;
     updateStats(finalText);
@@ -189,11 +294,10 @@ async function run(file) {
     const msg = err?.message ?? String(err);
     const friendly =
       msg.includes('memory')
-        ? 'Файл слишком большой для браузера. Попробуй аудио-формат (mp3, m4a) или Python-скрипт из этой папки.'
+        ? 'Файл слишком большой для браузера. Попробуй аудио-формат (mp3, m4a) или Python-скрипт.'
         : msg.includes('decode')
         ? 'Браузер не смог декодировать этот формат. Попробуй mp4, mp3 или m4a.'
         : msg;
-
     showError(friendly);
     resultCard.classList.remove('visible');
     console.error(err);
@@ -207,7 +311,6 @@ async function run(file) {
 function extractAudioInWorker(file, onStatus) {
   return new Promise((resolve, reject) => {
     const worker = new Worker('worker.js');
-
     worker.onmessage = ({ data }) => {
       if (data.type === 'status') {
         onStatus?.(data.msg);
@@ -219,12 +322,7 @@ function extractAudioInWorker(file, onStatus) {
         reject(new Error(data.msg));
       }
     };
-
-    worker.onerror = e => {
-      worker.terminate();
-      reject(new Error(e.message ?? 'Worker error'));
-    };
-
+    worker.onerror = e => { worker.terminate(); reject(new Error(e.message ?? 'Worker error')); };
     worker.postMessage({ file });
   });
 }
@@ -275,7 +373,7 @@ function updateStats(text) {
     `${text.length.toLocaleString('ru')} символов · ${words.toLocaleString('ru')} слов`;
 }
 
-// ── Buttons ───────────────────────────────────────────────────────────────
+// ── Download buttons ──────────────────────────────────────────────────────
 copyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(resultText.value);
@@ -304,11 +402,9 @@ dlDocxBtn.addEventListener('click', async () => {
       .split(/\n+/)
       .filter(p => p.trim())
       .map(line => new Paragraph({ children: [new TextRun({ text: line, size: 24, font: 'Arial' })] }));
-
     if (!paragraphs.length) {
       paragraphs.push(new Paragraph({ children: [new TextRun({ text, size: 24, font: 'Arial' })] }));
     }
-
     const doc  = new Document({ sections: [{ properties: {}, children: paragraphs }] });
     const blob = await Packer.toBlob(doc);
     triggerDownload(blob, currentBaseName + '.docx');

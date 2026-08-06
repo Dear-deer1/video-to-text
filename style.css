@@ -10,9 +10,31 @@ body {
 
 .container { max-width: 680px; margin: 0 auto; }
 
-header { margin-bottom: 36px; }
+header { margin-bottom: 28px; }
 h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
 .subtitle { margin-top: 6px; color: #666; font-size: 0.95rem; }
+
+/* ── Mode tabs ─────────────────────────────────────────────────────────── */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.mode-btn {
+  padding: 8px 18px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.mode-btn:hover    { border-color: #aaa; color: #222; }
+.mode-btn.active   { background: #1a1a1a; color: white; border-color: #1a1a1a; }
 
 /* ── Drop zone ─────────────────────────────────────────────────────────── */
 .drop-zone {
@@ -25,9 +47,9 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   transition: border-color 0.15s, background 0.15s;
   margin-bottom: 16px;
 }
-.drop-zone:hover           { border-color: #888; }
-.drop-zone.dragover        { border-color: #4f87ff; background: #f0f5ff; }
-.drop-zone.has-file        { border-style: solid; border-color: #4f87ff; background: #f5f8ff; }
+.drop-zone:hover          { border-color: #888; }
+.drop-zone.dragover       { border-color: #4f87ff; background: #f0f5ff; }
+.drop-zone.has-file       { border-style: solid; border-color: #4f87ff; background: #f5f8ff; }
 
 .drop-icon  { font-size: 2.5rem; margin-bottom: 14px; }
 .drop-main  { font-size: 1rem; color: #333; margin-bottom: 6px; }
@@ -54,9 +76,7 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   font-weight: 500;
   word-break: break-all;
 }
-
 .file-size { font-size: 0.82rem; color: #999; }
-
 .warn-tag {
   display: none;
   align-items: center;
@@ -67,6 +87,46 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   border-radius: 999px;
   font-size: 0.8rem;
   color: #92400e;
+}
+
+/* ── URL zone ──────────────────────────────────────────────────────────── */
+.url-zone {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.url-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.url-input:focus { border-color: #4f87ff; }
+
+.url-hint {
+  margin-top: 12px;
+  font-size: 0.87rem;
+  line-height: 1.6;
+  color: #555;
+  white-space: pre-wrap;
+}
+
+.url-hint.warn  { color: #92400e; background: #fff8e6; border: 1px solid #fcd34d; border-radius: 8px; padding: 10px 14px; }
+.url-hint.info  { color: #1e4db0; background: #eff4ff; border: 1px solid #bcd0ff; border-radius: 8px; padding: 10px 14px; }
+
+.url-hint code {
+  background: rgba(0,0,0,0.07);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: monospace;
 }
 
 /* ── Settings ──────────────────────────────────────────────────────────── */
@@ -81,17 +141,11 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   border-radius: 8px;
   padding: 8px 12px;
 }
-
 .setting-group label { font-size: 0.85rem; color: #666; white-space: nowrap; }
-
 .setting-group select {
-  border: none;
-  outline: none;
-  font-size: 0.9rem;
-  color: #1a1a1a;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
+  border: none; outline: none;
+  font-size: 0.9rem; color: #1a1a1a;
+  background: transparent; cursor: pointer; font-family: inherit;
 }
 
 /* ── Start button ──────────────────────────────────────────────────────── */
@@ -123,6 +177,7 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   color: #b91c1c;
   margin-bottom: 16px;
   line-height: 1.55;
+  white-space: pre-wrap;
 }
 .error-card.visible { display: block; }
 
@@ -143,12 +198,10 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   margin-bottom: 10px;
   gap: 8px;
 }
-
 .progress-status { font-size: 0.9rem; color: #333; }
 .progress-pct    { font-size: 0.9rem; color: #4f87ff; font-weight: 600; white-space: nowrap; }
 
 .bar-track { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
-
 .bar-fill {
   height: 100%;
   background: #4f87ff;
@@ -156,23 +209,13 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   transition: width 0.4s ease;
   width: 0%;
 }
-
 .bar-fill.pulse {
   animation: pulse 1.4s ease-in-out infinite;
   width: 100%;
 }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
-}
-
-.progress-eta {
-  margin-top: 8px;
-  font-size: 0.8rem;
-  color: #999;
-  min-height: 1.2em;
-}
+.progress-eta { margin-top: 8px; font-size: 0.8rem; color: #999; min-height: 1.2em; }
 
 /* ── Result card ───────────────────────────────────────────────────────── */
 .result-card {
@@ -191,7 +234,6 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   flex-wrap: wrap;
   gap: 10px;
 }
-
 .result-title   { font-size: 0.9rem; font-weight: 600; }
 .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -207,13 +249,10 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   white-space: nowrap;
 }
 .btn:disabled { opacity: 0.5; cursor: default; }
-
 .btn-ghost { background: #f0f0f0; color: #333; }
 .btn-ghost:hover:not(:disabled) { background: #e4e4e4; }
-
-.btn-dark { background: #1a1a1a; color: white; }
-.btn-dark:hover:not(:disabled) { background: #333; }
-
+.btn-dark  { background: #1a1a1a; color: white; }
+.btn-dark:hover:not(:disabled)  { background: #333; }
 .btn-green { background: #15803d; color: white; }
 .btn-green:hover:not(:disabled) { background: #166534; }
 
@@ -231,8 +270,7 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
   font-family: inherit;
   background: #fafafa;
 }
-
 .char-count { margin-top: 8px; font-size: 0.8rem; color: #aaa; text-align: right; }
 
-/* ── Footer note ───────────────────────────────────────────────────────── */
-.note { font-size: 0.8rem; color: #bbb; text-align: center; margin-top: 28px; }
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.note { font-size: 0.8rem; color: #bbb; text-align: center; margin-top: 28px; line-height: 1.6; }

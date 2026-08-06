@@ -1,14 +1,15 @@
 #!/bin/bash
 set -e
 
-echo "=== Installing dependencies ==="
-pip3 install openai-whisper imageio-ffmpeg
+echo "=== Устанавливаю зависимости ==="
+pip3 install openai-whisper imageio-ffmpeg yt-dlp
 
 echo ""
-echo "=== Done! ==="
+echo "=== Готово! ==="
 echo ""
-echo "Usage:"
+echo "Использование:"
 echo "  python3 transcribe.py video.mp4"
-echo "  python3 transcribe.py video.mp4 large"
+echo "  python3 transcribe.py https://youtube.com/watch?v=..."
+echo "  python3 transcribe.py https://mts-link.ru/record/..."
 echo ""
-echo "First run will download the Whisper model (~1.5 GB for 'medium')."
+echo "При первом запуске скачается модель Whisper (~1.5 ГБ)."
